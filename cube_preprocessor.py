@@ -1,4 +1,3 @@
-
 # This program is cube file convert to ascii format according to Eos ascii2mrc.
 # python3 cub_preprocessor.py < cubefile > new cubefile
 
@@ -10,22 +9,34 @@ input()  # 不要行
 atom_num = int(input().split()[0])
 # print('atomic number ... '+str(atom_num))
 
-dimention = '3'
+dimension = '3'
 x_num = int(input().split()[0])
 y_num = int(input().split()[0])
 z_num = int(input().split()[0])
 
 # cube dimension
-print(dimention+' '+str(z_num)+' '+str(y_num)+' '+str(x_num))
+print(dimension+' '+str(x_num)+' '+str(y_num)+' '+str(z_num))
 
 # skip phase
 for i in range(0, atom_num):
     input()
 
-# data processing phase
-line = ''
-for i in range(x_num*y_num):
-    for j in range(z_num // 6 + 1):
-        line += input().replace('\n', ' ')
-    print(line)
-    line = ''
+cube = [[[[''] for z in range(z_num)] for y in range(y_num)] for x in range(x_num)]
+
+for i in range(x_num):
+    for j in range(y_num):
+        lines = ''
+        for line in range(z_num // 6 + 1):
+            lines += input().replace('\n', ' ')
+        z_column = lines.split()
+        for k in range(z_num):
+            cube[i][j][k] = z_column[k]
+
+
+for i in range(z_num):
+    for j in range(y_num):
+        line = ''
+        for k in range(x_num):
+            # print(cube[k][j][i], end=' ')
+            line += ' ' + cube[k][j][i]
+        print(line)
