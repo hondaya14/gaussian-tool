@@ -1,4 +1,8 @@
 import numpy as np
+import sys
+
+voxel_file = sys.argv[1]
+hkl_ref_file = sys.argv[2]
 
 # original mrc size
 original_mrc_size_x = 131
@@ -21,16 +25,18 @@ center = [
 
 # read voxel data
 voxel_data = []
-while True:
-    try:
-        x, y, z, v = map(float, input().split())
-        x -= center[0]
-        y -= center[1]
-        z -= center[2]
-        # print('\t{0:.6f}\t{1:.6f}\t{2:.6f}\t{3:.6f}'.format(x, y, z, v, '.6f'))
-        voxel_data.append([x, y, z, v])
-    except EOFError:
-        break
+with open(voxel_file) as vf:
+    vl = vf.readlines()
+    for line in vl:
+        try:
+            x, y, z, v = map(float, line.split())
+            x -= center[0]
+            y -= center[1]
+            z -= center[2]
+            # print('\t{0:.6f}\t{1:.6f}\t{2:.6f}\t{3:.6f}'.format(x, y, z, v, '.6f'))
+            voxel_data.append([x, y, z, v])
+        except EOFError:
+            break
 
 # unit cell parameters
 unit_cell_tv_x = [7.1178, 0, 0]
@@ -56,21 +62,31 @@ reciprocal_lattice_vector = np.array([
     reciprocal_lattice_vector_c
 ])
 
-hkl_range = 1
+# hkl reference
+hkl = []
+with open(hkl_ref_file) as hrf:
+    hl = hrf.readlines()
+    for lines in hl:
+        h, k, l, *values = lines.split()
+        hkl.append([int(h), int(k), int(l)])
+
+hkl_range = 19
 
 
 def main():
-    for h in range(-hkl_range, hkl_range):
-        for k in range(-hkl_range, hkl_range):
-            for l in range(-hkl_range, hkl_range):
-                coord = h * reciprocal_lattice_vector_a + \
-                        k * reciprocal_lattice_vector_b + \
-                        l * reciprocal_lattice_vector_c
-                h_value_coord = coord[0] // mrc_unit_length * mrc_unit_length
-                k_value_coord = coord[1] // mrc_unit_length * mrc_unit_length
-                l_value_coord = coord[2] // mrc_unit_length * mrc_unit_length
-                value = search_value(h_value_coord, k_value_coord, l_value_coord)
-                print('\t{0}\t{1}\t{2}\t{3:.6f}'.format(h, k, l, value))
+    # for h in range(-hkl_range, hkl_range+1):
+    #     for k in range(-hkl_range, hkl_range+1):
+    #         for l in range(-hkl_range, hkl_range+1):
+    for e in hkl:
+        h, k, l = e[0], e[1], e[2]
+        coord = h * reciprocal_lattice_vector_a + \
+                k * reciprocal_lattice_vector_b + \
+                l * reciprocal_lattice_vector_c
+        h_value_coord = coord[0] // mrc_unit_length * mrc_unit_length
+        k_value_coord = coord[1] // mrc_unit_length * mrc_unit_length
+        l_value_coord = coord[2] // mrc_unit_length * mrc_unit_length
+        value = search_value(h_value_coord, k_value_coord, l_value_coord)
+        print('\t{0}\t{1}\t{2}\t{3:.6f}'.format(h, k, l, value), flush=True)
 
 
 def search_value(vx, vy, vz):
