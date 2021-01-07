@@ -77,6 +77,7 @@ def main():
     # for h in range(-hkl_range, hkl_range+1):
     #     for k in range(-hkl_range, hkl_range+1):
     #         for l in range(-hkl_range, hkl_range+1):
+    hkl.insert(0, [0, 0, 0])
     for e in hkl:
         h, k, l = e[0], e[1], e[2]
         coord = h * reciprocal_lattice_vector_a + \
