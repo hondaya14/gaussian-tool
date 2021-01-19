@@ -2,11 +2,16 @@ import sys
 import seaborn as sb
 import numpy as np
 from matplotlib import pyplot as plt
+import math
 
 # voxel params
-x_number = 130
-y_number = 100
-z_number = 76
+# x_number = 130
+# y_number = 100
+# z_number = 76
+x_number = 170
+y_number = 172
+z_number = 176
+
 
 
 # なに軸の何番目か
@@ -68,15 +73,18 @@ def make_plane(xi, yi, zi):
         section[xi][yi] = voxel[xi][yi][zi]
 
 
-save_path = 'test/test_section/'
+save_path = str(section_axis)+'_section/'
 for sn in range(section_number):
+    print('section number: ' + str(sn))
     for i in range(x_number):
         for j in range(y_number):
             for k in range(z_number):
                 if validate_axis(i, j, k, sn):
                     make_plane(i, j, k)
     plt.figure()
-    sb.heatmap(section, cmap='Blues', vmax=data_max, vmin=data_min)
+    sb.heatmap(section, cmap='gray', vmax=math.sqrt(data_max), vmin=data_min)
     # plt.show()
-    plt.savefig(save_path+section_axis+str(sn)+'.png')
+    plt.savefig(save_path+section_axis+'_'+str(sn)+'.png')
+    plt.clf()
+    plt.close()
 

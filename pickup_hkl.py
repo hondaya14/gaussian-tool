@@ -5,17 +5,21 @@ voxel_file = sys.argv[1]
 hkl_ref_file = sys.argv[2]
 
 # original mrc size
-original_mrc_size_x = 131
-original_mrc_size_y = 101
-original_mrc_size_z = 76
+# original_mrc_size_x = 131
+# original_mrc_size_y = 101
+# original_mrc_size_z = 76
+original_mrc_size_x = 170
+original_mrc_size_y = 172
+original_mrc_size_z = 176
 
 # cutoff mrc size - even
-cutoff_mrc_size_x = 130
-cutoff_mrc_size_y = 100
-cutoff_mrc_size_z = 76
+cutoff_mrc_size_x = 170
+cutoff_mrc_size_y = 172
+cutoff_mrc_size_z = 176
 
 # voxel length
-mrc_unit_length = 0.403
+# mrc_unit_length = 0.403
+mrc_unit_length = 0.336
 
 center = [
     cutoff_mrc_size_x / 2,
@@ -23,8 +27,6 @@ center = [
     cutoff_mrc_size_z / 2
 ]
 
-minx, miny, minz = 10, 10, 10
-maxx, maxy, maxz = 0, 0, 0
 
 # read voxel data
 voxel_data = []
@@ -45,17 +47,15 @@ with open(voxel_file) as vf:
             z = (z - cutoff_mrc_size_z / 2) / (cutoff_mrc_size_z * mrc_unit_length)
             # print('\t{0}\t{1}\t{2}\t{3}'.format(x, y, z, v))
             voxel_data.append([x, y, z, v])
-            minx, miny, minz = min(minx, x), min(miny, y), min(minz, z)
-            maxx, maxy, maxz = max(maxx, x), max(maxy, y), max(maxz, z)
 
         except EOFError:
             break
 
 
 # フーリエボクセル1個の幅
-voxel_unit_length_x = (maxx - minx) / (cutoff_mrc_size_x-1)
-voxel_unit_length_y = (maxy - miny) / (cutoff_mrc_size_y-1)
-voxel_unit_length_z = (maxz - minz) / (cutoff_mrc_size_z-1)
+voxel_unit_length_x = 1 / (cutoff_mrc_size_x * mrc_unit_length)
+voxel_unit_length_y = 1 / (cutoff_mrc_size_y * mrc_unit_length)
+voxel_unit_length_z = 1 / (cutoff_mrc_size_z * mrc_unit_length)
 
 # unit cell parameters
 unit_cell_tv_x = [7.1178, 0, 0]
@@ -101,9 +101,9 @@ def main():
                         l * reciprocal_lattice_vector_c
 
         # 特定のhklの点が対応するボクセルの座標
-        target_voxel_x = fourier_coord[0] // voxel_unit_length_x * voxel_unit_length_x
-        target_voxel_y = fourier_coord[1] // voxel_unit_length_y * voxel_unit_length_y
-        target_voxel_z = fourier_coord[2] // voxel_unit_length_z * voxel_unit_length_z
+        target_voxel_x = round(fourier_coord[0] / voxel_unit_length_x) * voxel_unit_length_x
+        target_voxel_y = round(fourier_coord[1] / voxel_unit_length_y) * voxel_unit_length_y
+        target_voxel_z = round(fourier_coord[2] / voxel_unit_length_z) * voxel_unit_length_z
 
         value = search_value(target_voxel_x, target_voxel_y, target_voxel_z)
         print('\t{0}\t{1}\t{2}\t{3:.6f}'.format(h, k, l, value), flush=True)
