@@ -22,14 +22,15 @@ cutoff_mrc_size_z = 176
 mrc_unit_length = 0.336
 
 center = [
-    cutoff_mrc_size_x / 2,
-    cutoff_mrc_size_y / 2,
-    cutoff_mrc_size_z / 2
+    int(cutoff_mrc_size_x / 2),
+    int(cutoff_mrc_size_y / 2),
+    int(cutoff_mrc_size_z / 2)
 ]
 
 
 # read voxel data
-voxel_data = []
+voxel_data = [[[0] * cutoff_mrc_size_z for i in range(cutoff_mrc_size_y)] for j in range(cutoff_mrc_size_x)]
+
 with open(voxel_file) as vf:
     vl = vf.readlines()
     cx = 0
@@ -42,11 +43,13 @@ with open(voxel_file) as vf:
             z = round(z / mrc_unit_length)
 
             # 逆空間(Å^-1)に変換
-            x = (x - cutoff_mrc_size_x / 2) / (cutoff_mrc_size_x * mrc_unit_length)
-            y = (y - cutoff_mrc_size_y / 2) / (cutoff_mrc_size_y * mrc_unit_length)
-            z = (z - cutoff_mrc_size_z / 2) / (cutoff_mrc_size_z * mrc_unit_length)
-            # print('\t{0}\t{1}\t{2}\t{3}'.format(x, y, z, v))
-            voxel_data.append([x, y, z, v])
+            # x = (x - cutoff_mrc_size_x / 2) / (cutoff_mrc_size_x * mrc_unit_length)
+            # y = (y - cutoff_mrc_size_y / 2) / (cutoff_mrc_size_y * mrc_unit_length)
+            # z = (z - cutoff_mrc_size_z / 2) / (cutoff_mrc_size_z * mrc_unit_length)
+            # # print('\t{0}\t{1}\t{2}\t{3}'.format(x, y, z, v))
+            # voxel_data.append([x, y, z, v])
+
+            voxel_data[x][y][z] = v
 
         except EOFError:
             break
@@ -100,21 +103,30 @@ def main():
                         k * reciprocal_lattice_vector_b + \
                         l * reciprocal_lattice_vector_c
 
-        # 特定のhklの点が対応するボクセルの座標
-        target_voxel_x = round(fourier_coord[0] / voxel_unit_length_x) * voxel_unit_length_x
-        target_voxel_y = round(fourier_coord[1] / voxel_unit_length_y) * voxel_unit_length_y
-        target_voxel_z = round(fourier_coord[2] / voxel_unit_length_z) * voxel_unit_length_z
+        # 特定のhklの点が対応するボクセルの座標()
+        target_voxel_x = round(fourier_coord[0] / voxel_unit_length_x) + center[0]
+        target_voxel_y = round(fourier_coord[1] / voxel_unit_length_y) + center[1]
+        target_voxel_z = round(fourier_coord[2] / voxel_unit_length_z) + center[2]
 
-        value = search_value(target_voxel_x, target_voxel_y, target_voxel_z)
-        print('\t{0}\t{1}\t{2}\t{3:.6f}'.format(h, k, l, value), flush=True)
+        # 特定のhklの点が対応するボクセルの座標(Å-1)
+        # target_voxel_x = round(fourier_coord[0] / voxel_unit_length_x) * voxel_unit_length_x
+        # target_voxel_y = round(fourier_coord[1] / voxel_unit_length_y) * voxel_unit_length_y
+        # target_voxel_z = round(fourier_coord[2] / voxel_unit_length_z) * voxel_unit_length_z
+
+        # value = search_value(target_voxel_x, target_voxel_y, target_voxel_z)
+        # print('\t{0}\t{1}\t{2}\t{3:.6f}'.format(h, k, l, value), flush=True)
+        try:
+            print(
+                '\t{0}\t{1}\t{2}\t{3:.6f}'.format(h, k, l, voxel_data[target_voxel_x][target_voxel_y][target_voxel_z]), flush=True)
+        except IndexError:
+            print('\t{0}\t{1}\t{2}\t{3}'.format(h, k, l, "out of range"), flush=True)
 
 
 def search_value(vx, vy, vz):
     for data in voxel_data:
         if np.isclose(data[0], vx) and np.isclose(data[1], vy) and np.isclose(data[2], vz):
             return data[3]
-    print('pick up failed')
-    exit(1)
+    return 'out range hkl'
 
 
 if __name__ == '__main__':
